@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إضراب الكرامة</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* إعدادات عامة */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* تغيير تنسيق الأزرار */
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            margin: 10px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        /* الأزرار حسب اللغة */
+        #language-selector button {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        #language-selector button:hover {
+            background-color: #0056b3;
+        }
+
+        /* أزرار التصويت */
+        #vote-yes-btn {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        #vote-no-btn {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+        #vote-yes-btn:hover {
+            background-color: #218838;
+        }
+
+        #vote-no-btn:hover {
+            background-color: #c82333;
+        }
+
+        /* الأزرار في صفحة الاختيارات */
+        #stats-by-year-btn, #stats-general-btn, #home-btn, #show-stats-btn, #back-btn {
+            background-color: #17a2b8;
+            color: #fff;
+        }
+
+        #stats-by-year-btn:hover, #stats-general-btn:hover, #home-btn:hover, #show-stats-btn:hover, #back-btn:hover {
+            background-color: #138496;
+        }
+
+        /* تنسيق النموذج */
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        form label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        form input, form select {
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        form input[type="file"] {
+            border: none;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #343a40;
+        }
+
+        h2 {
+            margin-top: 20px;
+        }
+
+        /* تنسيق الرسوم البيانية */
+        .chart-container {
+            width: 100%;
+            height: 400px;
+        }
+
+        /* التنسيق الخاص بجزء الإحصائيات */
+        #stats-selection, #stats-display-year, #stats-display-general {
+            display: none;
+        }
+
+        /* التنسيق عند التبديل بين الأقسام */
+        #home, #vote-form, #stats-selection, #stats-display-year, #stats-display-general {
+            display: none;
+        }
+
+        /* التنسيق للأقسام */
+        #language-selector {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        /* تنسيق الأزرار و العناوين عند التبديل بين الصفحات */
+        #options button, #stats-selection button {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+        }
+
+        #back-btn, #back-home-btn, #back-home-btn-general {
+            background-color: #6c757d;
+            color: #fff;
+        }
+
+        #back-btn:hover, #back-home-btn:hover, #back-home-btn-general:hover {
+            background-color: #5a6268;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="language-selector">
+        <button onclick="changeLanguage('ar')">العربية</button>
+        <button onclick="changeLanguage('fr')">Français</button>
+        <button onclick="changeLanguage('en')">English</button>
+    </div>
+
+    <header>
+        <h1 id="title">إضراب الكرامة</h1>
+    </header>
+
+    <!-- صفحة تسجيل الدخول -->
+    <div id="login-section" class="container">
+        <h2 id="loginTitle">تسجيل الدخول</h2>
+        <form onsubmit="handleLogin(); return false;">
+            <label for="username" id="usernameLabel">اسم المستخدم</label>
+            <input type="text" id="username" placeholder="اسم المستخدم" required>
+            <label for="password" id="passwordLabel">كلمة المرور</label>
+            <input type="password" id="password" placeholder="كلمة المرور" required>
+            <button type="submit" id="loginBtn">تسجيل الدخول</button>
+        </form>
+        <button onclick="showRegister()" id="registerLink">إنشاء حساب</button>
+    </div>
+
+    <!-- صفحة التسجيل -->
+    <div id="register-section" class="container" style="display:none;">
+        <h2 id="registerTitle">إنشاء حساب جديد</h2>
+        <form onsubmit="handleRegister(); return false;">
+            <label for="new-username" id="newUsernameLabel">اسم المستخدم</label>
+            <input type="text" id="new-username" placeholder="اسم المستخدم" required>
+            <label for="new-password" id="newPasswordLabel">كلمة المرور</label>
+            <input type="password" id="new-password" placeholder="كلمة المرور" required>
+            <button type="submit" id="createAccountBtn">إنشاء الحساب</button>
+        </form>
+        <button onclick="showLogin()" id="loginLink">تسجيل الدخول</button>
+    </div>
+
+    <!-- الصفحة الرئيسية -->
+    <div id="home" class="container">
+        <p id="homeMessage">مرحباً بكم في موقع التصويت الخاص بإضراب الكرامة.</p>
+        <div id="options">
+            <button id="vote-btn" onclick="goToSection('vote-form')" id="voteBtn">التصويت</button>
+        </div>
+    </div>
+
+    <!-- قسم التصويت -->
+    <div id="vote-form" class="container">
+        <h2 id="voteHeader">بيانات التصويت</h2>
+        <form onsubmit="goToSection('question-form'); return false;">
+            <label for="name" id="nameLabel">الاسم واللقب</label>
+            <input type="text" id="name" placeholder="اكتب اسمك ولقبك" required>
+            <label for="field" id="fieldLabel">الشعبة</label>
+            <select id="field" required>
+                <option value="طب">طب</option>
+                <option value="صيدلة">صيدلة</option>
+                <option value="طب أسنان">طب أسنان</option>
+            </select>
+            <label for="year" id="yearLabel">العام الدراسي</label>
+            <input type="number" id="year" placeholder="اكتب السنة الدراسية" required>
+            <label for="student-card" id="cardLabel">صورة بطاقة الطالب</label>
+            <input type="file" id="student-card" class="upload" required>
+            <button type="submit" id="nextBtn">التالي</button>
+        </form>
+    </div>
+
+    <!-- قسم السؤال -->
+    <div id="question-form" class="container">
+        <h2 id="questionHeader">هل أنت مع مواصلة الإضراب؟</h2>
+        <button id="vote-yes-btn" onclick="submitVote('yes')">نعم</button>
+        <button id="vote-no-btn" onclick="submitVote('no')">لا</button>
+    </div>
+
+    <!-- صفحة اختيار الإحصائيات -->
+    <div id="stats-selection" class="container">
+        <h2 id="statsHeader">اختار نوع الإحصائيات</h2>
+        <button id="stats-by-year-btn" onclick="showStatsByYear()">إحصائيات حسب السنة والشعبة</button>
+        <button id="stats-general-btn" onclick="showGeneralStats()">إحصائيات عامة</button>
+        <button id="back-btn" onclick="goToSection('home')" id="backBtn">العودة إلى الصفحة الرئيسية</button>
+    </div>
+
+    <!-- إحصائيات حسب السنة والشعبة -->
+    <div id="stats-display-year" class="container">
+        <h2 id="yearStatsHeader">إحصائيات حسب السنة والشعبة</h2>
+        <label for="stats-field" id="statsFieldLabel">اختر الشعبة</label>
+        <select id="stats-field" onchange="updateYearStats()">
+            <option value="طب">طب</option>
+            <option value="صيدلة">صيدلة</option>
+            <option value="طب أسنان">طب أسنان</option>
+        </select>
+        <canvas id="statsChart" width="400" height="400"></canvas>
+        <button id="back-home-btn" onclick="goToSection('stats-selection')" id="backHomeBtn">الرجوع</button>
+    </div>
+
+    <!-- الإحصائيات العامة -->
+    <div id="stats-display-general" class="container">
+        <h2 id="generalStatsHeader">الإحصائيات العامة</h2>
+        <canvas id="generalStatsChart" width="400" height="400"></canvas>
+        <button id="back-home-btn-general" onclick="goToSection('stats-selection')" id="backHomeBtnGeneral">الرجوع</button>
+    </div>
+
+    <script>
+        const languageData = {
+            ar: {
+                loginTitle: "تسجيل الدخول",
+                usernameLabel: "اسم المستخدم",
+                passwordLabel: "كلمة المرور",
+                loginBtn: "تسجيل الدخول",
+                registerLink: "إنشاء حساب",
+                registerTitle: "إنشاء حساب جديد",
+                newUsernameLabel: "اسم المستخدم",
+                newPasswordLabel: "كلمة المرور",
+                createAccountBtn: "إنشاء الحساب",
+                loginLink: "تسجيل الدخول",
+                homeMessage: "مرحباً بكم في موقع التصويت الخاص بإضراب الكرامة.",
+                voteBtn: "التصويت",
+                voteHeader: "بيانات التصويت",
+                nameLabel: "الاسم واللقب",
+                fieldLabel: "الشعبة",
+                yearLabel: "العام الدراسي",
+                cardLabel: "صورة بطاقة الطالب",
+                nextBtn: "التالي",
+                questionHeader: "هل أنت مع مواصلة الإضراب؟",
+                voteYesBtn: "نعم",
+                voteNoBtn: "لا",
+                statsHeader: "اختار نوع الإحصائيات",
+                statsByYearBtn: "إحصائيات حسب السنة والشعبة",
+                statsGeneralBtn: "إحصائيات عامة",
+                backBtn: "العودة إلى الصفحة الرئيسية",
+                yearStatsHeader: "إحصائيات حسب السنة والشعبة",
+                statsFieldLabel: "اختر الشعبة",
+                backHomeBtn: "الرجوع",
+                generalStatsHeader: "الإحصائيات العامة",
+                backHomeBtnGeneral: "الرجوع"
+            },
+            en: {
+                loginTitle: "Login",
+                usernameLabel: "Username",
+                passwordLabel: "Password",
+                loginBtn: "Login",
+                registerLink: "Register",
+                registerTitle: "Create a New Account",
+                newUsernameLabel: "Username",
+                newPasswordLabel: "Password",
+                createAccountBtn: "Create Account",
+                loginLink: "Login",
+                homeMessage: "Welcome to the Strike Vote website.",
+                voteBtn: "Vote",
+                voteHeader: "Vote Data",
+                nameLabel: "Full Name",
+                fieldLabel: "Field",
+                yearLabel: "Academic Year",
+                cardLabel: "Student Card Image",
+                nextBtn: "Next",
+                questionHeader: "Do you support continuing the strike?",
+                voteYesBtn: "Yes",
+                voteNoBtn: "No",
+                statsHeader: "Choose the type of statistics",
+                statsByYearBtn: "Statistics by year and field",
+                statsGeneralBtn: "General Statistics",
+                backBtn: "Back to Home",
+                yearStatsHeader: "Statistics by year and field",
+                statsFieldLabel: "Select the field",
+                backHomeBtn: "Back",
+                generalStatsHeader: "General Statistics",
+                backHomeBtnGeneral: "Back"
+            },
+            fr: {
+                homeMessage: "Bienvenue sur le site de vote de la grève.",
+                voteBtn: "Voter",
+                statsBtn: "Statistiques",
+                loginLink: "Connexion",
+                registerLink: "Créer un compte",
+                loginTitle: "Connexion",
+                usernameLabel: "Nom d'utilisateur",
+                passwordLabel: "Mot de passe",
+                loginBtn: "Connexion",
+                registerTitle: "Créer un nouveau compte",
+                newUsernameLabel: "Nom d'utilisateur",
+                newPasswordLabel: "Mot de passe",
+                createAccountBtn: "Créer un compte",
+                voteHeader: "Données de vote",
+                nameLabel: "Nom et prénom",
+                fieldLabel: "Domaine",
+                yearLabel: "Année académique",
+                cardLabel: "Carte étudiante",
+                nextBtn: "Suivant",
+                questionHeader: "Êtes-vous pour la continuation de la grève ?",
+                voteYesBtn: "Oui",
+                voteNoBtn: "Non",
+                statsHeader: "Choisissez le type de statistiques",
+                statsByYearBtn: "Statistiques par année et domaine",
+                statsGeneralBtn: "Statistiques générales",
+                backBtn: "Retour à l'accueil",
+                yearStatsHeader: "Statistiques par année et domaine",
+                statsFieldLabel: "Sélectionner le domaine",
+                backHomeBtn: "Retour",
+                generalStatsHeader: "Statistiques générales",
+                backHomeBtnGeneral: "Retour"
+}
+}
+        
+
+        function changeLanguage(language) {
+            document.documentElement.lang = language;
+
+            const texts = languageData[language];
+            Object.keys(texts).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.textContent = texts[key];
+                }
+            });
+
+            if (language === 'ar') {
+                document.body.dir = 'rtl';
+            } else {
+                document.body.dir = 'ltr';
+            }
+        }
+
+        function handleLogin() {
+            // تسجيل الدخول، إضافة الكود الخاص بك هنا
+        }
+
+        function showRegister() {
+            goToSection('register-section');
+        }
+
+        function showLogin() {
+            goToSection('login-section');
+        }
+
+        function goToSection(sectionId) {
+            const sections = document.querySelectorAll('[id$="-section"], [id$="-form"], [id$="-selection"], [id$="-display"]');
+            sections.forEach(section => {
+                section.style.display = 'none';
+            });
+
+            document.getElementById(sectionId).style.display = 'block';
+        }
+
+    </script>
+
+    
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
